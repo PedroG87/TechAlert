@@ -1,40 +1,306 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>TechAlert</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${platformName + ' | Sistema de Alertas'}">TechAlert | Sistema de Alertas</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <div class="container-fluid">
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
-                </li>
-                    <div>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Area de Usuário
-                            </a>
-                            <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Cadastro de áreas de risco</a></li>
-                            <li><a class="dropdown-item" href="#">Consultar areas de risco </a></li>
-                            <li><a class="dropdown-item" href="#">Registro de ocorrências </a></li>
-                            </ul>
+<div class="app-shell">
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg topbar">
+            <div class="container-fluid px-0">
+                <a class="navbar-brand d-flex align-items-center gap-3" href="/home">
+                    <span class="brand-mark"><i class="bi bi-broadcast-pin"></i></span>
+                    <span>
+                        <span class="brand-title d-block" th:text="${platformName}">TechAlert</span>
+                        <span class="brand-subtitle">Monitoramento e prevenção inteligente</span>
+                    </span>
+                </a>
+
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Abrir navegação">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-2 mt-3 mt-lg-0">
+                        <li class="nav-item"><a class="nav-link nav-link-custom active" href="/home">Home</a></li>
+                        <li class="nav-item"><a class="nav-link nav-link-custom" href="#recursos">Recursos</a></li>
+                        <li class="nav-item"><a class="nav-link nav-link-custom" href="#como-funciona">Como funciona</a></li>
+                        <li class="nav-item"><a class="nav-link nav-link-custom" href="#beneficios">Benefícios</a></li>
+                        <li class="nav-item" th:if="${isCitizen}">
+                            <a class="nav-link nav-link-custom" href="/cidadao/notificacoes">Área do cidadão</a>
                         </li>
+                        <li class="nav-item" th:if="${isAdmin}">
+                            <a class="nav-link nav-link-custom" href="/adm">Painel ADM</a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
+                        <a class="btn btn-soft" th:if="${currentUser == null}" href="/login">Entrar</a>
+                        <a class="btn btn-soft" th:if="${currentUser != null}" href="/logout">Sair</a>
+                        <a class="btn btn-primary-custom" th:if="${currentUser == null}" href="/cadastro">Criar conta</a>
+                        <a class="btn btn-primary-custom" th:if="${isCitizen}" href="/cidadao/notificacoes">Minha central</a>
+                        <a class="btn btn-primary-custom" th:if="${isAdmin}" href="/adm">Abrir painel ADM</a>
                     </div>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-                <ul class='login-menu me-auto mb-2 mb-lg-0'>
-                    <li>
-                        <a href="login.html" class="btn btn-primary">Login</a>
-                    </li>
-                </ul>
-</nav>
+    <main>
+        <div class="info-banner error mb-4" th:if="${erro == 'acesso'}">
+            Acesso negado. Somente administradores podem abrir a tela de gerenciamento de notificacoes.
+        </div>
+        <div class="info-banner error mb-4" th:if="${erro == 'acesso-cidadao'}">
+            Acesso negado. Somente cidadaos autenticados podem abrir a central do cidadao.
+        </div>
 
+        <section class="hero-section">
+            <div class="row g-4 align-items-stretch">
+                <div class="col-lg-7">
+                    <div class="hero-panel h-100">
+                        <span class="eyebrow"><i class="bi bi-shield-check"></i> Plataforma de resposta rápida</span>
+                        <h1 class="hero-title" th:text="${homeHeroMessage}">Alertas mais rápidos para proteger pessoas, regiões e operações.</h1>
+                        <p class="hero-text">
+                            O sistema foi reestruturado para um MVP claro e funcional, priorizando alertas essenciais,
+                            gestão simples de usuários e uma operação administrativa direta.
+                        </p>
+
+                        <div class="hero-actions">
+                            <a class="btn btn-primary-custom" href="/cadastro">Criar conta</a>
+                            <a class="btn btn-outline-custom" href="/login">Acessar painel</a>
+                        </div>
+
+                        <div class="hero-highlights">
+                            <div class="mini-stat">
+                                <span>24/7</span>
+                                <small>Monitoramento contínuo de ocorrências críticas.</small>
+                            </div>
+                            <div class="mini-stat">
+                                <span>+3 canais</span>
+                                <small>Comunicação focada no essencial do produto.</small>
+                            </div>
+                            <div class="mini-stat">
+                                <span>Tempo real</span>
+                                <small>Leitura simples das notificações prioritárias.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="status-board">
+                        <span class="board-chip"><i class="bi bi-activity"></i> Central de situação</span>
+                        <h2 class="mt-4 fw-bold">Visão resumida da operação</h2>
+                        <p class="mb-0 text-white-50">
+                            Uma interface bonita e objetiva para acompanhar alertas, status das regiões e tempo médio de resposta.
+                        </p>
+
+                        <ul class="board-list">
+                            <li>
+                                <div>
+                                    <strong>Zona Norte</strong>
+                                    <div class="text-white-50 small">Chuvas intensas monitoradas</div>
+                                </div>
+                                <span class="badge-status warn">Atenção</span>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Centro</strong>
+                                    <div class="text-white-50 small">Fluxo urbano estável</div>
+                                </div>
+                                <span class="badge-status safe">Normal</span>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Base Operacional</strong>
+                                    <div class="text-white-50 small">Equipe pronta para acionamento</div>
+                                </div>
+                                <span class="badge-status safe">Disponível</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" th:if="${isAdmin}">
+            <div class="admin-entry-card d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="section-kicker">Perfil administrativo</span>
+                    <h2 class="section-title mb-2">Você tem acesso ao painel administrativo MVP</h2>
+                    <p class="section-text mb-0">
+                        Use o painel restrito para acompanhar métricas principais, gerenciar usuários,
+                        moderar notificações e editar configurações básicas da plataforma.
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary-custom" href="/adm">Abrir painel ADM</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" th:if="${isCitizen}">
+            <div class="admin-entry-card d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="section-kicker">Perfil cidadão</span>
+                    <h2 class="section-title mb-2">Sua central pessoal de notificações já está disponível</h2>
+                    <p class="section-text mb-0">
+                        Consulte os alertas destinados à sua conta e acompanhe de forma direta as mensagens mais importantes.
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary-custom" href="/cidadao/notificacoes">Abrir central do cidadão</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" id="recursos">
+            <div class="section-heading">
+                <span class="section-kicker">Recursos principais</span>
+                <h2 class="section-title">Tudo o que um sistema de alerta moderno precisa</h2>
+                <p class="section-text">
+                    O produto foi simplificado para concentrar apenas o que é central no lançamento:
+                    receber alertas, administrar usuários e moderar o conteúdo essencial da plataforma.
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-card">
+                        <div class="icon-bubble"><i class="bi bi-bell"></i></div>
+                        <h3 class="card-title-strong">Alertas instantâneos</h3>
+                        <p class="muted-copy mb-0">Envio rápido de comunicados prioritários para cada cidadão atendido.</p>
+                    </article>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-card">
+                        <div class="icon-bubble"><i class="bi bi-geo-alt"></i></div>
+                        <h3 class="card-title-strong">Mapeamento de risco</h3>
+                        <p class="muted-copy mb-0">Classificação por gravidade para facilitar a leitura dos riscos mais relevantes.</p>
+                    </article>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-card">
+                        <div class="icon-bubble"><i class="bi bi-people"></i></div>
+                        <h3 class="card-title-strong">Fluxo cidadão e administrador</h3>
+                        <p class="muted-copy mb-0">Experiência pensada para apenas dois perfis claros: cidadão e administrador.</p>
+                    </article>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-card">
+                        <div class="icon-bubble"><i class="bi bi-graph-up-arrow"></i></div>
+                        <h3 class="card-title-strong">Decisão orientada por dados</h3>
+                        <p class="muted-copy mb-0">Painel administrativo enxuto com indicadores suficientes para a operação inicial.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" id="como-funciona">
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-5">
+                    <div class="alert-strip">
+                        <span class="section-kicker">Como funciona</span>
+                        <h2 class="section-title">Do registro ao alerta em poucos passos</h2>
+                        <p class="section-text mb-0">
+                            O MVP do TechAlert concentra o fluxo mínimo necessário para operação inicial:
+                            cadastro, envio de alertas, leitura pelo cidadão e administração básica do sistema.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <ul class="timeline-list">
+                        <li class="timeline-item">
+                            <span class="timeline-step">1</span>
+                            <div>
+                                <strong>Cadastro do usuário</strong>
+                                <p class="muted-copy mb-0">Cidadãos acessam sua central e administradores operam o painel de gestão com perfis organizados.</p>
+                            </div>
+                        </li>
+                        <li class="timeline-item">
+                            <span class="timeline-step">2</span>
+                            <div>
+                                <strong>Registro da ocorrência</strong>
+                                <p class="muted-copy mb-0">O administrador cadastra ou modera as notificações essenciais da plataforma.</p>
+                            </div>
+                        </li>
+                        <li class="timeline-item">
+                            <span class="timeline-step">3</span>
+                            <div>
+                                <strong>Triagem e notificação</strong>
+                                <p class="muted-copy mb-0">O sistema envia a mensagem ao cidadão com tipo e nível de periculosidade.</p>
+                            </div>
+                        </li>
+                        <li class="timeline-item">
+                            <span class="timeline-step">4</span>
+                            <div>
+                                <strong>Acompanhamento da resposta</strong>
+                                <p class="muted-copy mb-0">O cidadão consulta sua central e confirma a leitura das mensagens recebidas.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" id="beneficios">
+            <div class="section-heading">
+                <span class="section-kicker">Benefícios</span>
+                <h2 class="section-title">Mais clareza, confiança e organização durante situações críticas</h2>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <article class="info-card">
+                        <h3 class="card-title-strong">Comunicação mais eficiente</h3>
+                        <p class="muted-copy mb-0">Mensagens objetivas reduzem ruído e ajudam cada pessoa a saber o que fazer.</p>
+                    </article>
+                </div>
+                <div class="col-md-4">
+                    <article class="info-card">
+                        <h3 class="card-title-strong">Gestão visual das prioridades</h3>
+                        <p class="muted-copy mb-0">O sistema mostra apenas o que importa para operar o produto com segurança e clareza.</p>
+                    </article>
+                </div>
+                <div class="col-md-4">
+                    <article class="info-card">
+                        <h3 class="card-title-strong">Base pronta para evolução</h3>
+                        <p class="muted-copy mb-0">A base segue pronta para evoluir sem comprometer a simplicidade do lançamento inicial.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <div class="cta-banner d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <div>
+                    <h2 class="mb-2 fw-bold">Deixe o TechAlert pronto para agir quando mais importa.</h2>
+                    <p th:text="|Fale com a equipe pelo e-mail ${supportEmail} e coloque o MVP em operação com o essencial.|">Fale com a equipe pelo e-mail de suporte.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary-custom" href="/cadastro">Cadastrar agora</a>
+                    <a class="btn btn-outline-custom" href="/login">Fazer login</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-card d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <strong th:text="${platformName}">TechAlert</strong>
+                <div>Sistema visual para alertas, prevenção e resposta coordenada.</div>
+            </div>
+            <div>Estruturado como MVP para evoluir sem excesso de complexidade.</div>
+        </div>
+    </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

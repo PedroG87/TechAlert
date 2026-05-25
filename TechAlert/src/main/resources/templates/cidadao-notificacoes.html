@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechAlert | Central do Cidadão</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app-shell">
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg topbar">
+            <div class="container-fluid px-0">
+                <a class="navbar-brand d-flex align-items-center gap-3" href="/home">
+                    <span class="brand-mark"><i class="bi bi-broadcast-pin"></i></span>
+                    <span>
+                        <span class="brand-title d-block">TechAlert</span>
+                        <span class="brand-subtitle">Central do cidadão</span>
+                    </span>
+                </a>
+
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#citizenNav" aria-controls="citizenNav" aria-expanded="false" aria-label="Abrir navegação">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="citizenNav">
+                    <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-2 mt-3 mt-lg-0">
+                        <li class="nav-item"><a class="nav-link nav-link-custom" href="/home">Home</a></li>
+                        <li class="nav-item"><a class="nav-link nav-link-custom active" href="/cidadao/notificacoes">Minhas notificações</a></li>
+                        <li class="nav-item" th:if="${isAdmin}"><a class="nav-link nav-link-custom" href="/adm">Painel ADM</a></li>
+                    </ul>
+
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mt-3 mt-lg-0">
+                        <div class="admin-user-chip" th:if="${currentUser != null}">
+                            <i class="bi bi-person-badge"></i>
+                            <span th:text="${currentUser.nome()}">Cidadão</span>
+                        </div>
+                        <a class="btn btn-soft" href="/logout">Sair</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="section-block admin-page-section">
+        <section class="section-heading mb-4">
+            <span class="section-kicker">Acompanhamento pessoal</span>
+            <h1 class="section-title mb-2">Minhas notificações e alertas</h1>
+            <p class="section-text mb-0">
+                Consulte as notificações essenciais enviadas para sua conta e marque como lidas as mensagens já verificadas.
+            </p>
+        </section>
+
+        <section class="row g-4 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <article class="summary-card">
+                    <div class="summary-label">Total recebido</div>
+                    <div class="summary-value" id="summaryTotal">--</div>
+                    <div class="summary-help">Volume de mensagens disponíveis para sua conta.</div>
+                </article>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <article class="summary-card">
+                    <div class="summary-label">Não lidas</div>
+                    <div class="summary-value" id="summaryUnread">--</div>
+                    <div class="summary-help">Notificações que ainda exigem sua atenção.</div>
+                </article>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <article class="summary-card">
+                    <div class="summary-label">Ativas</div>
+                    <div class="summary-value" id="summaryActive">--</div>
+                    <div class="summary-help">Notificações disponíveis no momento.</div>
+                </article>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <article class="summary-card">
+                    <div class="summary-label">Críticas</div>
+                    <div class="summary-value" id="summaryCriticals">--</div>
+                    <div class="summary-help">Alertas com maior nível de periculosidade.</div>
+                </article>
+            </div>
+        </section>
+
+        <section class="admin-panel mb-4">
+            <div class="admin-panel-header">
+                <div>
+                    <h2 class="admin-panel-title">Filtros e busca</h2>
+                    <p class="muted-copy mb-0">Localize rapidamente o que precisa por palavra-chave, tipo ou status de leitura.</p>
+                </div>
+            </div>
+
+            <form id="filterForm" class="filter-grid">
+                <div class="form-field-wide">
+                    <label for="searchInput" class="form-label">Buscar por palavra-chave</label>
+                    <input id="searchInput" name="search" type="search" class="form-control" placeholder="Buscar no título, conteúdo ou remetente">
+                </div>
+                <div>
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select id="statusFilter" name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="NAO_LIDA">Não lidas</option>
+                        <option value="LIDA">Lidas</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="typeFilter" class="form-label">Tipo</label>
+                    <select id="typeFilter" name="type" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="SISTEMA">Sistema</option>
+                        <option value="ALERTA">Alerta</option>
+                        <option value="ATUALIZACAO">Atualização</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary-custom">Aplicar filtros</button>
+                    <button type="button" id="clearFilters" class="btn btn-outline-custom">Limpar</button>
+                </div>
+            </form>
+        </section>
+
+        <div id="feedbackMessage" class="feedback-banner d-none" role="alert"></div>
+        <div id="errorMessage" class="feedback-banner error d-none" role="alert"></div>
+
+        <section class="notification-list-shell">
+            <div id="loadingState" class="empty-state d-none">
+                <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+                <h2>Carregando notificações...</h2>
+                <p class="muted-copy mb-0">Buscando os alertas essenciais da sua conta.</p>
+            </div>
+
+            <div id="emptyState" class="empty-state d-none">
+                <i class="bi bi-inbox"></i>
+                <h2>Nenhuma notificação encontrada</h2>
+                <p class="muted-copy mb-0">Ajuste os filtros ou aguarde novas mensagens em tempo real.</p>
+            </div>
+
+            <div id="notificationList" class="notification-grid"></div>
+        </section>
+
+        <div class="text-center mt-4">
+            <button type="button" id="loadMoreButton" class="btn btn-soft d-none">Carregar mais notificações</button>
+        </div>
+    </main>
+</div>
+
+<script>
+    window.techAlertCitizenConfig = {
+        listUrl: '/api/cidadao/notificacoes',
+        summaryUrl: '/api/cidadao/notificacoes/summary'
+    };
+</script>
+<script src="/js/cidadao-notificacoes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
