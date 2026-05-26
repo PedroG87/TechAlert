@@ -7,8 +7,9 @@ import Techalert.TechAlert.model.Usuario;
 import Techalert.TechAlert.security.UserRole;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpecificationExecutor<Usuario> {
 
     Optional<Usuario> findByEmailIgnoreCase(String email);
 

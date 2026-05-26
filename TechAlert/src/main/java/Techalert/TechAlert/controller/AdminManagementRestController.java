@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -62,6 +63,13 @@ public class AdminManagementRestController {
         return userService.listAll().stream().map(this::toUserResponse).toList();
     }
 
+    @GetMapping("/citizens")
+    public UserService.CitizenPageResponse listCitizens(@RequestParam(required = false) String search,
+                                                        @RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size) {
+        return userService.listCitizens(search, page, size);
+    }
+
     @PostMapping("/users")
     public UserResponse createUser(@RequestBody UserRequest request) {
         Usuario user = userService.createUser(
@@ -91,6 +99,40 @@ public class AdminManagementRestController {
                 request.dataNascimento()
         );
         return toUserResponse(user);
+    }
+
+    @PutMapping("/citizens/{id}")
+    public UserService.CitizenResponse updateCitizen(@PathVariable Long id,
+                                                     @RequestBody CitizenRequest request,
+                                                     HttpSession session) {
+        return userService.updateCitizen(
+                id,
+                request.nome(),
+                request.email(),
+                request.senha(),
+                request.cpf(),
+                request.telefone(),
+                request.endereco(),
+                request.dataNascimento(),
+                currentAdminId(session)
+        );
+    }
+
+    @PostMapping("/citizens/{id}/promote")
+    public UserService.PromotionResult promoteCitizen(@PathVariable Long id,
+                                                      @RequestBody PromotionRequest request,
+                                                      HttpSession session) {
+        return userService.promoteCitizenToAdmin(
+                id,
+                currentAdminId(session),
+                request.confirmacao(),
+                request.motivo()
+        );
+    }
+
+    @GetMapping("/citizens/{id}/history")
+    public List<UserService.AdminActionHistoryResponse> listCitizenHistory(@PathVariable Long id) {
+        return userService.listCitizenHistory(id);
     }
 
     @DeleteMapping("/users/{id}")
@@ -130,6 +172,14 @@ public class AdminManagementRestController {
         );
     }
 
+    private Long currentAdminId(HttpSession session) {
+        SessionUser currentUser = (SessionUser) session.getAttribute(AdminAccessInterceptor.SESSION_USER_KEY);
+        if (currentUser == null || !currentUser.isAdmin()) {
+            throw new IllegalArgumentException("Sessao administrativa invalida.");
+        }
+        return currentUser.id();
+    }
+
     public record DashboardSummaryResponse(
             long totalUsuarios,
             long totalCidadaos,
@@ -159,6 +209,23 @@ public class AdminManagementRestController {
             String telefone,
             String endereco,
             String role
+    ) {
+    }
+
+    public record CitizenRequest(
+            String nome,
+            String email,
+            String senha,
+            String cpf,
+            String telefone,
+            String endereco,
+            LocalDate dataNascimento
+    ) {
+    }
+
+    public record PromotionRequest(
+            boolean confirmacao,
+            String motivo
     ) {
     }
 

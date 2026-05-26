@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import java.util.UUID;
+
 import Techalert.TechAlert.model.Usuario;
 import Techalert.TechAlert.repository.UsuarioRepository;
 import Techalert.TechAlert.repository.SystemNotificationRepository;
@@ -201,6 +203,86 @@ class NotificationManagementWebTests {
 
         mockMvc.perform(delete("/api/adm/users/" + createdUserId).session(adminSession))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldListCitizensWithPaginationAndSearch() throws Exception {
+        mockMvc.perform(get("/api/adm/citizens")
+                        .session(sessionWithRole(UserRole.ADM))
+                        .param("search", "cidadao")
+                        .param("page", "0")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].role").value("CIDADAO"))
+                .andExpect(jsonPath("$.totalElements", greaterThan(0)))
+                .andExpect(jsonPath("$.size").value(1));
+    }
+
+    @Test
+    void shouldAllowAdminToEditCitizenAndPromoteWithHistory() throws Exception {
+        MockHttpSession adminSession = sessionWithRole(UserRole.ADM);
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String email = "cidadao." + suffix + "@techalert.com";
+        String cpf = "9" + String.format("%010d", Math.abs(suffix.hashCode()) % 1_000_000_000L);
+
+        mockMvc.perform(post("/api/adm/users")
+                        .session(adminSession)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "nome":"Cidadao Gerenciavel",
+                                  "email":"%s",
+                                  "senha":"Cidadao123",
+                                  "cpf":"%s",
+                                  "telefone":"(11) 94444-0000",
+                                  "endereco":"Rua dos Testes, 50",
+                                  "dataNascimento":"1994-03-15",
+                                  "role":"CIDADAO"
+                                }
+                                """.formatted(email, cpf)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("CIDADAO"));
+
+        Long citizenId = usuarioRepository.findByEmailIgnoreCase(email)
+                .map(Usuario::getId)
+                .orElseThrow();
+
+        mockMvc.perform(put("/api/adm/citizens/" + citizenId)
+                        .session(adminSession)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "nome":"Cidadao Atualizado",
+                                  "email":"%s",
+                                  "senha":"",
+                                  "cpf":"%s",
+                                  "telefone":"(11) 95555-2020",
+                                  "endereco":"Rua Atualizada, 99",
+                                  "dataNascimento":"1994-03-15"
+                                }
+                                """.formatted(email, cpf)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("Cidadao Atualizado"))
+                .andExpect(jsonPath("$.role").value("CIDADAO"));
+
+        mockMvc.perform(post("/api/adm/citizens/" + citizenId + "/promote")
+                        .session(adminSession)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "confirmacao":true,
+                                  "motivo":"Cobertura administrativa regional"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADM"))
+                .andExpect(jsonPath("$.message").value("Promocao realizada com sucesso."));
+
+        mockMvc.perform(get("/api/adm/citizens/" + citizenId + "/history")
+                        .session(adminSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].actionType").value("CIDADAO_PROMOVIDO"))
+                .andExpect(jsonPath("$[0].adminNome").exists());
     }
 
     @Test

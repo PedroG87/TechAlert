@@ -157,6 +157,112 @@
         <section class="admin-panel mb-4">
             <div class="toolbar-wrap">
                 <div>
+                    <h2 class="admin-panel-title">Gestão de cidadãos</h2>
+                    <p class="muted-copy mb-0">Busque cidadãos, atualize dados cadastrais e promova acessos administrativos com segurança.</p>
+                </div>
+            </div>
+
+            <form id="citizenSearchForm" class="row g-3 mt-1 align-items-end">
+                <div class="col-lg-7">
+                    <label for="citizenSearch" class="form-label">Busca por nome, CPF ou e-mail</label>
+                    <input id="citizenSearch" type="text" class="form-control" placeholder="Ex.: Maria, 11111111111 ou maria@techalert.com">
+                </div>
+                <div class="col-sm-4 col-lg-2">
+                    <label for="citizenPageSize" class="form-label">Itens por página</label>
+                    <select id="citizenPageSize" class="form-select">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+                <div class="col-sm-8 col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary-custom flex-grow-1">Buscar</button>
+                    <button type="button" id="resetCitizenSearch" class="btn btn-outline-custom">Limpar</button>
+                </div>
+            </form>
+
+            <div class="table-responsive mt-4">
+                <table class="table admin-table align-middle">
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>CPF</th>
+                        <th>Telefone</th>
+                        <th>Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="citizensTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                <div id="citizensPaginationStatus" class="muted-copy mb-0">Página 1</div>
+                <div class="d-flex gap-2">
+                    <button type="button" id="citizensPrevPage" class="btn btn-outline-custom btn-sm">Anterior</button>
+                    <button type="button" id="citizensNextPage" class="btn btn-outline-custom btn-sm">Próxima</button>
+                </div>
+            </div>
+
+            <form id="citizenForm" class="row g-3 mt-4">
+                <input type="hidden" id="citizenId">
+                <div class="col-md-6">
+                    <label for="citizenNome" class="form-label">Nome completo</label>
+                    <input id="citizenNome" type="text" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="citizenEmail" class="form-label">E-mail</label>
+                    <input id="citizenEmail" type="email" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="citizenSenha" class="form-label">Nova senha</label>
+                    <input id="citizenSenha" type="text" class="form-control" placeholder="Opcional na edição">
+                </div>
+                <div class="col-md-4">
+                    <label for="citizenCpf" class="form-label">CPF</label>
+                    <input id="citizenCpf" type="text" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="citizenTelefone" class="form-label">Telefone</label>
+                    <input id="citizenTelefone" type="text" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label for="citizenEndereco" class="form-label">Endereço</label>
+                    <input id="citizenEndereco" type="text" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label for="citizenDataNascimento" class="form-label">Data de nascimento</label>
+                    <input id="citizenDataNascimento" type="date" class="form-control">
+                </div>
+                <div class="col-12 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary-custom">Salvar cidadão</button>
+                    <button type="button" id="promoteCitizenButton" class="btn btn-outline-custom">Promover para administrador</button>
+                    <button type="button" id="resetCitizenForm" class="btn btn-outline-custom">Cancelar</button>
+                </div>
+            </form>
+
+            <div class="mt-4">
+                <h3 class="h5 mb-3">Histórico de alterações</h3>
+                <div id="citizenHistoryEmpty" class="muted-copy">Selecione um cidadão para visualizar o histórico.</div>
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Ação</th>
+                            <th>Administrador</th>
+                            <th>Descrição</th>
+                        </tr>
+                        </thead>
+                        <tbody id="citizenHistoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-panel mb-4">
+            <div class="toolbar-wrap">
+                <div>
                     <h2 class="admin-panel-title">Moderação de notificações</h2>
                     <p class="muted-copy mb-0">Crie, arquive ou remova os conteúdos essenciais que chegam aos cidadãos.</p>
                 </div>
@@ -233,6 +339,7 @@
     window.techAlertAdminConfig = {
         summaryUrl: '/api/adm/dashboard/summary',
         usersUrl: '/api/adm/users',
+        citizensUrl: '/api/adm/citizens',
         notificationsUrl: '/api/adm/notificacoes',
         settingsUrl: '/api/adm/settings'
     };

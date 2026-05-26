@@ -43,6 +43,11 @@ public class DataInitializer {
                             LocalDate.of(1988, 5, 10)
                     ));
 
+            if (!Usuario.perfilForRole(admin.getRole()).equals(admin.getPerfil())) {
+                admin.setPerfil(Usuario.perfilForRole(admin.getRole()));
+                usuarioRepository.save(admin);
+            }
+
             Usuario citizenOne = usuarioRepository.findByEmailIgnoreCase("cidadao@techalert.com")
                     .orElseGet(() -> userService.createUser(
                             "Cidadao TechAlert",
@@ -54,6 +59,11 @@ public class DataInitializer {
                             "Rua das Flores, 120",
                             LocalDate.of(1995, 7, 22)
                     ));
+
+            if (!Usuario.perfilForRole(citizenOne.getRole()).equals(citizenOne.getPerfil())) {
+                citizenOne.setPerfil(Usuario.perfilForRole(citizenOne.getRole()));
+                usuarioRepository.save(citizenOne);
+            }
 
             if (systemNotificationRepository.count() == 0) {
                 notificationService.createNotificationForUsers(

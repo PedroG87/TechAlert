@@ -118,3 +118,38 @@ O sistema foi alinhado ao conceito de MVP ao concentrar o produto em três eixos
 - configurações básicas.
 
 A nova área ADM implementa exatamente o mínimo necessário para operar esse recorte com usabilidade, estabilidade e foco no valor core do projeto.
+
+## 9. Regra Do Campo Perfil Na Tabela Usuario
+
+O sistema foi alinhado para operar sem qualquer conteudo de operador.
+
+Valores validos da coluna `perfil` na aplicacao e no banco:
+
+- `ADMINISTRADOR`
+- `MORADOR`
+
+Mapeamento adotado pela aplicacao:
+
+- `UserRole.ADM` -> `ADMINISTRADOR`
+- `UserRole.CIDADAO` -> `MORADOR`
+
+Tambem foi adicionada uma rotina de alinhamento do schema para:
+
+- migrar registros legados com `perfil` fora do padrao ativo para um valor compativel;
+- recriar a constraint `chk_usuario_perfil` sem o valor `OPERADOR`.
+
+## 10. Gestao De Cidadaos No Painel Administrativo
+
+Foi adicionada uma nova funcionalidade de administracao de cidadaos com:
+
+- listagem paginada e filtravel por nome, CPF ou e-mail;
+- edicao completa de dados cadastrais;
+- promocao segura de cidadao para administrador com confirmacao explicita;
+- registro historico das alteracoes administrativas em `admin_action_log`.
+
+Medidas de seguranca aplicadas:
+
+- acesso restrito a rotas `/adm/**` e `/api/adm/**`;
+- validacao server-side de nome, e-mail, CPF, senha e papel do usuario;
+- persistencia de senha sempre com `BCryptPasswordEncoder`;
+- historico sem armazenamento de senha ou outros segredos.

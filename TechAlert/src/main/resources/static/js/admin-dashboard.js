@@ -19,6 +19,27 @@ const adminElements = {
     userEndereco: document.getElementById("userEndereco"),
     userDataNascimento: document.getElementById("userDataNascimento"),
     usersTableBody: document.getElementById("usersTableBody"),
+    citizenSearchForm: document.getElementById("citizenSearchForm"),
+    citizenSearch: document.getElementById("citizenSearch"),
+    citizenPageSize: document.getElementById("citizenPageSize"),
+    resetCitizenSearch: document.getElementById("resetCitizenSearch"),
+    citizensTableBody: document.getElementById("citizensTableBody"),
+    citizensPaginationStatus: document.getElementById("citizensPaginationStatus"),
+    citizensPrevPage: document.getElementById("citizensPrevPage"),
+    citizensNextPage: document.getElementById("citizensNextPage"),
+    citizenForm: document.getElementById("citizenForm"),
+    citizenId: document.getElementById("citizenId"),
+    citizenNome: document.getElementById("citizenNome"),
+    citizenEmail: document.getElementById("citizenEmail"),
+    citizenSenha: document.getElementById("citizenSenha"),
+    citizenCpf: document.getElementById("citizenCpf"),
+    citizenTelefone: document.getElementById("citizenTelefone"),
+    citizenEndereco: document.getElementById("citizenEndereco"),
+    citizenDataNascimento: document.getElementById("citizenDataNascimento"),
+    resetCitizenForm: document.getElementById("resetCitizenForm"),
+    promoteCitizenButton: document.getElementById("promoteCitizenButton"),
+    citizenHistoryEmpty: document.getElementById("citizenHistoryEmpty"),
+    citizenHistoryTableBody: document.getElementById("citizenHistoryTableBody"),
     notificationForm: document.getElementById("notificationForm"),
     notificationTitulo: document.getElementById("notificationTitulo"),
     notificationTipo: document.getElementById("notificationTipo"),
@@ -30,6 +51,13 @@ const adminElements = {
 };
 
 let usersCache = [];
+const citizensState = {
+    page: 0,
+    size: 10,
+    search: "",
+    hasNext: false,
+    totalElements: 0
+};
 
 document.addEventListener("DOMContentLoaded", async () => {
     bindAdminEvents();
@@ -73,6 +101,107 @@ function bindAdminEvents() {
         resetUserForm();
     });
 
+    adminElements.citizenSearchForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        citizensState.page = 0;
+        citizensState.search = adminElements.citizenSearch.value.trim();
+        citizensState.size = Number(adminElements.citizenPageSize.value || 10);
+        await loadCitizens();
+    });
+
+    adminElements.resetCitizenSearch?.addEventListener("click", async () => {
+        adminElements.citizenSearch.value = "";
+        adminElements.citizenPageSize.value = "10";
+        citizensState.page = 0;
+        citizensState.search = "";
+        citizensState.size = 10;
+        await loadCitizens();
+    });
+
+    adminElements.citizensPrevPage?.addEventListener("click", async () => {
+        if (citizensState.page === 0) {
+            return;
+        }
+        citizensState.page -= 1;
+        await loadCitizens();
+    });
+
+    adminElements.citizensNextPage?.addEventListener("click", async () => {
+        if (!citizensState.hasNext) {
+            return;
+        }
+        citizensState.page += 1;
+        await loadCitizens();
+    });
+
+    adminElements.citizenForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const citizenId = adminElements.citizenId.value;
+        if (!citizenId) {
+            showError("Selecione um cidadão antes de salvar alterações.");
+            return;
+        }
+
+        try {
+            await requestJson(`${adminConfig.citizensUrl}/${citizenId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome: adminElements.citizenNome.value.trim(),
+                    email: adminElements.citizenEmail.value.trim(),
+                    senha: adminElements.citizenSenha.value,
+                    cpf: adminElements.citizenCpf.value.trim(),
+                    telefone: adminElements.citizenTelefone.value.trim(),
+                    endereco: adminElements.citizenEndereco.value.trim(),
+                    dataNascimento: adminElements.citizenDataNascimento.value || null
+                })
+            });
+            showFeedback("Dados do cidadão atualizados com sucesso.");
+            await Promise.all([
+                loadUsers(),
+                loadCitizens(),
+                loadCitizenHistory(citizenId)
+            ]);
+        } catch (error) {
+            showError(error.message || "Não foi possível atualizar o cidadão.");
+        }
+    });
+
+    adminElements.resetCitizenForm?.addEventListener("click", () => {
+        resetCitizenForm();
+    });
+
+    adminElements.promoteCitizenButton?.addEventListener("click", async () => {
+        const citizenId = adminElements.citizenId.value;
+        if (!citizenId) {
+            showError("Selecione um cidadão para promover.");
+            return;
+        }
+
+        if (!window.confirm("Confirma a promoção deste cidadão para administrador?")) {
+            return;
+        }
+
+        const reason = window.prompt("Informe o motivo da promoção (opcional):", "") ?? "";
+
+        try {
+            await requestJson(`${adminConfig.citizensUrl}/${citizenId}/promote`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    confirmacao: true,
+                    motivo: reason
+                })
+            });
+            showFeedback("Cidadão promovido para administrador com sucesso.");
+            resetCitizenForm();
+            await reloadDashboard();
+        } catch (error) {
+            showError(error.message || "Não foi possível promover o cidadão.");
+        }
+    });
+
     adminElements.notificationForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -102,6 +231,7 @@ async function reloadDashboard() {
     await Promise.all([
         loadSummary(),
         loadUsers(),
+        loadCitizens(),
         loadNotifications(),
         loadSettings()
     ]);
@@ -159,6 +289,71 @@ async function loadUsers() {
                 adminElements.notificationTargetUser.appendChild(option);
             }
         });
+}
+
+async function loadCitizens() {
+    const query = new URLSearchParams({
+        page: String(citizensState.page),
+        size: String(citizensState.size)
+    });
+
+    if (citizensState.search) {
+        query.set("search", citizensState.search);
+    }
+
+    const page = await requestJson(`${adminConfig.citizensUrl}?${query.toString()}`);
+    citizensState.hasNext = Boolean(page.hasNext);
+    citizensState.totalElements = Number(page.totalElements || 0);
+
+    adminElements.citizensTableBody.innerHTML = "";
+
+    page.content.forEach((citizen) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${escapeHtml(citizen.nome)}</td>
+            <td>${escapeHtml(citizen.email)}</td>
+            <td>${escapeHtml(citizen.cpfMascarado || citizen.cpf || "")}</td>
+            <td>${escapeHtml(citizen.telefone || "")}</td>
+            <td class="admin-actions-cell">
+                <button type="button" class="btn btn-outline-custom btn-sm js-edit-citizen">Editar</button>
+            </td>
+        `;
+
+        row.querySelector(".js-edit-citizen")?.addEventListener("click", async () => {
+            fillCitizenForm(citizen);
+            await loadCitizenHistory(citizen.id);
+        });
+
+        adminElements.citizensTableBody.appendChild(row);
+    });
+
+    const currentPage = page.page + 1;
+    adminElements.citizensPaginationStatus.textContent = `Página ${currentPage} • ${page.totalElements} cidadão(ãos) encontrado(s)`;
+    adminElements.citizensPrevPage.disabled = page.page === 0;
+    adminElements.citizensNextPage.disabled = !page.hasNext;
+}
+
+async function loadCitizenHistory(citizenId) {
+    const history = await requestJson(`${adminConfig.citizensUrl}/${citizenId}/history`);
+    adminElements.citizenHistoryTableBody.innerHTML = "";
+
+    if (!history.length) {
+        adminElements.citizenHistoryEmpty.classList.remove("d-none");
+        adminElements.citizenHistoryEmpty.textContent = "Nenhuma alteração registrada para este cidadão.";
+        return;
+    }
+
+    adminElements.citizenHistoryEmpty.classList.add("d-none");
+    history.forEach((item) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${escapeHtml(item.criadoEm)}</td>
+            <td>${formatHistoryAction(item.actionType)}</td>
+            <td>${escapeHtml(item.adminNome)}</td>
+            <td>${escapeHtml(item.descricao || "")}</td>
+        `;
+        adminElements.citizenHistoryTableBody.appendChild(row);
+    });
 }
 
 async function loadNotifications() {
@@ -254,10 +449,29 @@ function fillUserForm(user) {
     adminElements.userEndereco.value = user.endereco || "";
 }
 
+function fillCitizenForm(citizen) {
+    adminElements.citizenId.value = citizen.id;
+    adminElements.citizenNome.value = citizen.nome || "";
+    adminElements.citizenEmail.value = citizen.email || "";
+    adminElements.citizenSenha.value = "";
+    adminElements.citizenCpf.value = citizen.cpf || "";
+    adminElements.citizenTelefone.value = citizen.telefone || "";
+    adminElements.citizenEndereco.value = citizen.endereco || "";
+    adminElements.citizenDataNascimento.value = citizen.dataNascimento || "";
+}
+
 function resetUserForm() {
     adminElements.userForm.reset();
     adminElements.userId.value = "";
     adminElements.userRole.value = "CIDADAO";
+}
+
+function resetCitizenForm() {
+    adminElements.citizenForm.reset();
+    adminElements.citizenId.value = "";
+    adminElements.citizenHistoryTableBody.innerHTML = "";
+    adminElements.citizenHistoryEmpty.classList.remove("d-none");
+    adminElements.citizenHistoryEmpty.textContent = "Selecione um cidadão para visualizar o histórico.";
 }
 
 async function requestJson(url, options = {}, expectJson = true) {
@@ -322,6 +536,11 @@ function formatSeverity(level) {
     if (level === "ALTA") return "Alta";
     if (level === "MEDIA") return "Média";
     return "Baixa";
+}
+
+function formatHistoryAction(actionType) {
+    if (actionType === "CIDADAO_PROMOVIDO") return "Promoção para administrador";
+    return "Atualização cadastral";
 }
 
 function escapeHtml(value) {
