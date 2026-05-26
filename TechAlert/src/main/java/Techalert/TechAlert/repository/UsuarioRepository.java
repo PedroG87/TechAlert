@@ -3,20 +3,20 @@ package Techalert.TechAlert.repository;
 import java.util.List;
 import java.util.Optional;
 
-import Techalert.TechAlert.model.AppUser;
+import Techalert.TechAlert.model.Usuario;
 import Techalert.TechAlert.security.UserRole;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AppUserRepository extends JpaRepository<AppUser, Long> {
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    Optional<AppUser> findByEmailIgnoreCase(String email);
+    Optional<Usuario> findByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByCpf(String cpf);
 
-    List<AppUser> findAllByRole(UserRole role);
+    List<Usuario> findAllByRole(UserRole role);
 
     long countByRole(UserRole role);
 }

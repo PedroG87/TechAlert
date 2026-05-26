@@ -15,8 +15,8 @@ import jakarta.persistence.Table;
 import Techalert.TechAlert.security.UserRole;
 
 @Entity
-@Table(name = "app_user")
-public class AppUser {
+@Table(name = "usuario")
+public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,10 +47,10 @@ public class AppUser {
     @Column(nullable = false, length = 20)
     private UserRole role = UserRole.CIDADAO;
 
-    public AppUser() {
+    public Usuario() {
     }
 
-    public AppUser(Long id, String nome, String email, String senha, String cpf, String telefone, String endereco, Date dataNascimento) {
+    public Usuario(Long id, String nome, String email, String senha, String cpf, String telefone, String endereco, Date dataNascimento) {
         this.id = id;
         this.nome = nome;
         this.email = email;

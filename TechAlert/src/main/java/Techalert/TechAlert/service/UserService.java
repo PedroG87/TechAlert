@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import Techalert.TechAlert.model.AppUser;
-import Techalert.TechAlert.repository.AppUserRepository;
+import Techalert.TechAlert.model.Usuario;
+import Techalert.TechAlert.repository.UsuarioRepository;
 import Techalert.TechAlert.security.UserRole;
 
 import org.springframework.stereotype.Service;
@@ -17,10 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
 
-    private final AppUserRepository appUserRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public UserService(AppUserRepository appUserRepository) {
-        this.appUserRepository = appUserRepository;
+    public UserService(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional
@@ -41,14 +41,14 @@ public class UserService {
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
         String normalizedCpf = cpf.replaceAll("\\D", "");
 
-        if (appUserRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+        if (usuarioRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             return RegistrationResult.failure("Ja existe uma conta cadastrada com este e-mail.");
         }
-        if (!normalizedCpf.isBlank() && appUserRepository.existsByCpf(normalizedCpf)) {
+        if (!normalizedCpf.isBlank() && usuarioRepository.existsByCpf(normalizedCpf)) {
             return RegistrationResult.failure("Ja existe uma conta cadastrada com este CPF.");
         }
 
-        AppUser user = new AppUser();
+        Usuario user = new Usuario();
         user.setNome(nome.trim());
         user.setEmail(normalizedEmail);
         user.setSenha(senha);
@@ -57,28 +57,28 @@ public class UserService {
         user.setTelefone(blankToNull(telefone));
         user.setEndereco(blankToNull(endereco));
         user.setDataNascimento(toDate(dataNascimento));
-        appUserRepository.save(user);
+        usuarioRepository.save(user);
 
         return RegistrationResult.success(user.getId());
     }
 
     @Transactional(readOnly = true)
-    public Optional<AppUser> findById(Long id) {
-        return appUserRepository.findById(id);
+    public Optional<Usuario> findById(Long id) {
+        return usuarioRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
-    public List<AppUser> findByRole(UserRole role) {
-        return appUserRepository.findAllByRole(role);
+    public List<Usuario> findByRole(UserRole role) {
+        return usuarioRepository.findAllByRole(role);
     }
 
     @Transactional(readOnly = true)
-    public List<AppUser> listAll() {
-        return appUserRepository.findAll();
+    public List<Usuario> listAll() {
+        return usuarioRepository.findAll();
     }
 
     @Transactional
-    public AppUser createUser(String nome,
+    public Usuario createUser(String nome,
                               String email,
                               String senha,
                               UserRole role,
@@ -86,7 +86,7 @@ public class UserService {
                               String telefone,
                               String endereco,
                               LocalDate dataNascimento) {
-        AppUser user = new AppUser();
+        Usuario user = new Usuario();
         user.setNome(nome);
         user.setEmail(email.trim().toLowerCase(Locale.ROOT));
         user.setSenha(senha);
@@ -95,11 +95,11 @@ public class UserService {
         user.setTelefone(blankToNull(telefone));
         user.setEndereco(blankToNull(endereco));
         user.setDataNascimento(toDate(dataNascimento));
-        return appUserRepository.save(user);
+        return usuarioRepository.save(user);
     }
 
     @Transactional
-    public AppUser updateUser(Long id,
+    public Usuario updateUser(Long id,
                               String nome,
                               String email,
                               String senha,
@@ -108,20 +108,20 @@ public class UserService {
                               String telefone,
                               String endereco,
                               LocalDate dataNascimento) {
-        AppUser user = appUserRepository.findById(id)
+        Usuario user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario nao encontrado."));
 
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
         String normalizedCpf = cpf == null ? null : cpf.replaceAll("\\D", "");
 
-        appUserRepository.findByEmailIgnoreCase(normalizedEmail)
+        usuarioRepository.findByEmailIgnoreCase(normalizedEmail)
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
                     throw new IllegalArgumentException("Ja existe outro usuario com este e-mail.");
                 });
 
         if (normalizedCpf != null && !normalizedCpf.isBlank()) {
-            appUserRepository.findAll().stream()
+            usuarioRepository.findAll().stream()
                     .filter(existing -> normalizedCpf.equals(existing.getCpf()))
                     .filter(existing -> !existing.getId().equals(id))
                     .findFirst()
@@ -140,7 +140,7 @@ public class UserService {
         user.setTelefone(blankToNull(telefone));
         user.setEndereco(blankToNull(endereco));
         user.setDataNascimento(toDate(dataNascimento));
-        return appUserRepository.save(user);
+        return usuarioRepository.save(user);
     }
 
     @Transactional
@@ -148,17 +148,17 @@ public class UserService {
         if (id.equals(currentUserId)) {
             throw new IllegalArgumentException("O administrador logado nao pode remover a propria conta.");
         }
-        if (!appUserRepository.existsById(id)) {
+        if (!usuarioRepository.existsById(id)) {
             throw new IllegalArgumentException("Usuario nao encontrado.");
         }
-        appUserRepository.deleteById(id);
+        usuarioRepository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     public UserMetricsSummary getMetrics() {
-        long total = appUserRepository.count();
-        long admins = appUserRepository.countByRole(UserRole.ADM);
-        long cidadaos = appUserRepository.countByRole(UserRole.CIDADAO);
+        long total = usuarioRepository.count();
+        long admins = usuarioRepository.countByRole(UserRole.ADM);
+        long cidadaos = usuarioRepository.countByRole(UserRole.CIDADAO);
         return new UserMetricsSummary(total, admins, cidadaos);
     }
 

@@ -13,8 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import Techalert.TechAlert.model.AppUser;
-import Techalert.TechAlert.repository.AppUserRepository;
+import Techalert.TechAlert.model.Usuario;
+import Techalert.TechAlert.repository.UsuarioRepository;
 import Techalert.TechAlert.repository.SystemNotificationRepository;
 import Techalert.TechAlert.security.AdminAccessInterceptor;
 import Techalert.TechAlert.security.SessionUser;
@@ -37,7 +37,7 @@ class NotificationManagementWebTests {
     private MockMvc mockMvc;
 
     @Autowired
-    private AppUserRepository appUserRepository;
+    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private SystemNotificationRepository systemNotificationRepository;
@@ -166,8 +166,8 @@ class NotificationManagementWebTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("gestor@techalert.com"));
 
-        Long createdUserId = appUserRepository.findByEmailIgnoreCase("gestor@techalert.com")
-                .map(AppUser::getId)
+        Long createdUserId = usuarioRepository.findByEmailIgnoreCase("gestor@techalert.com")
+                .map(Usuario::getId)
                 .orElseThrow();
 
         mockMvc.perform(put("/api/adm/users/" + createdUserId)
@@ -240,7 +240,7 @@ class NotificationManagementWebTests {
     }
 
     private MockHttpSession sessionWithRole(UserRole role) {
-        AppUser user = appUserRepository.findAllByRole(role).stream()
+        Usuario user = usuarioRepository.findAllByRole(role).stream()
                 .findFirst()
                 .orElseThrow();
         MockHttpSession session = new MockHttpSession();

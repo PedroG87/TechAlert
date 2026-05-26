@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import Techalert.TechAlert.model.AppUser;
+import Techalert.TechAlert.model.Usuario;
 import Techalert.TechAlert.model.NotificationSeverity;
 import Techalert.TechAlert.model.NotificationStatus;
 import Techalert.TechAlert.model.NotificationType;
 import Techalert.TechAlert.model.SystemNotification;
-import Techalert.TechAlert.repository.AppUserRepository;
+import Techalert.TechAlert.repository.UsuarioRepository;
 import Techalert.TechAlert.repository.SystemNotificationRepository;
 import Techalert.TechAlert.security.UserRole;
 
@@ -30,12 +30,12 @@ public class NotificationService {
     private static final DateTimeFormatter DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final SystemNotificationRepository systemNotificationRepository;
-    private final AppUserRepository appUserRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public NotificationService(SystemNotificationRepository systemNotificationRepository,
-                               AppUserRepository appUserRepository) {
+                               UsuarioRepository usuarioRepository) {
         this.systemNotificationRepository = systemNotificationRepository;
-        this.appUserRepository = appUserRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional(readOnly = true)
@@ -94,13 +94,13 @@ public class NotificationService {
                                                  NotificationType tipo,
                                                  NotificationSeverity severity,
                                                  Long targetUserId) {
-        List<AppUser> targets;
+        List<Usuario> targets;
         if (targetUserId != null) {
-            AppUser target = appUserRepository.findById(targetUserId)
+            Usuario target = usuarioRepository.findById(targetUserId)
                     .orElseThrow(() -> new IllegalArgumentException("Usuario alvo nao encontrado."));
             targets = List.of(target);
         } else {
-            targets = appUserRepository.findAllByRole(UserRole.CIDADAO);
+            targets = usuarioRepository.findAllByRole(UserRole.CIDADAO);
         }
 
         if (targets.isEmpty()) {
@@ -108,7 +108,7 @@ public class NotificationService {
         }
 
         List<SystemNotification> notifications = new ArrayList<>();
-        for (AppUser target : targets) {
+        for (Usuario target : targets) {
             SystemNotification notification = new SystemNotification();
             notification.setTitulo(titulo);
             notification.setConteudo(conteudo);
@@ -129,13 +129,13 @@ public class NotificationService {
                                            String conteudo,
                                            NotificationType tipo,
                                            NotificationSeverity severity,
-                                           List<AppUser> targets) {
+                                           List<Usuario> targets) {
         if (targets == null || targets.isEmpty()) {
             return;
         }
 
         List<SystemNotification> notifications = new ArrayList<>();
-        for (AppUser target : targets) {
+        for (Usuario target : targets) {
             SystemNotification notification = new SystemNotification();
             notification.setTitulo(titulo);
             notification.setConteudo(conteudo);

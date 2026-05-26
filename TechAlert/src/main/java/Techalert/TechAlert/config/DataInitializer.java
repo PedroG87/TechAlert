@@ -3,10 +3,10 @@ package Techalert.TechAlert.config;
 import java.time.LocalDate;
 import java.util.List;
 
-import Techalert.TechAlert.model.AppUser;
+import Techalert.TechAlert.model.Usuario;
 import Techalert.TechAlert.model.NotificationSeverity;
 import Techalert.TechAlert.model.NotificationType;
-import Techalert.TechAlert.repository.AppUserRepository;
+import Techalert.TechAlert.repository.UsuarioRepository;
 import Techalert.TechAlert.repository.SystemNotificationRepository;
 import Techalert.TechAlert.security.UserRole;
 import Techalert.TechAlert.service.NotificationService;
@@ -22,7 +22,7 @@ public class DataInitializer {
 
     @Bean
     CommandLineRunner seedApplicationData(UserService userService,
-                                          AppUserRepository appUserRepository,
+                                          UsuarioRepository usuarioRepository,
                                           SystemNotificationRepository systemNotificationRepository,
                                           NotificationService notificationService,
                                           PlatformSettingService platformSettingService) {
@@ -31,7 +31,7 @@ public class DataInitializer {
             platformSettingService.save("home.hero.message", "Receba alertas essenciais e acompanhe a plataforma com foco no que realmente importa.", "Mensagem principal exibida na home.");
             platformSettingService.save("platform.support.email", "suporte@techalert.com", "Contato basico de suporte do MVP.");
 
-            AppUser admin = appUserRepository.findByEmailIgnoreCase("admin@techalert.com")
+            Usuario admin = usuarioRepository.findByEmailIgnoreCase("admin@techalert.com")
                     .orElseGet(() -> userService.createUser(
                             "Administrador TechAlert",
                             "admin@techalert.com",
@@ -43,7 +43,7 @@ public class DataInitializer {
                             LocalDate.of(1988, 5, 10)
                     ));
 
-            AppUser citizenOne = appUserRepository.findByEmailIgnoreCase("cidadao@techalert.com")
+            Usuario citizenOne = usuarioRepository.findByEmailIgnoreCase("cidadao@techalert.com")
                     .orElseGet(() -> userService.createUser(
                             "Cidadao TechAlert",
                             "cidadao@techalert.com",

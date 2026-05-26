@@ -5,7 +5,7 @@ import java.util.List;
 
 import jakarta.servlet.http.HttpSession;
 
-import Techalert.TechAlert.model.AppUser;
+import Techalert.TechAlert.model.Usuario;
 import Techalert.TechAlert.model.PlatformSetting;
 import Techalert.TechAlert.security.AdminAccessInterceptor;
 import Techalert.TechAlert.security.SessionUser;
@@ -64,7 +64,7 @@ public class AdminManagementRestController {
 
     @PostMapping("/users")
     public UserResponse createUser(@RequestBody UserRequest request) {
-        AppUser user = userService.createUser(
+        Usuario user = userService.createUser(
                 request.nome(),
                 request.email(),
                 request.senha(),
@@ -79,7 +79,7 @@ public class AdminManagementRestController {
 
     @PutMapping("/users/{id}")
     public UserResponse updateUser(@PathVariable Long id, @RequestBody UserRequest request) {
-        AppUser user = userService.updateUser(
+        Usuario user = userService.updateUser(
                 id,
                 request.nome(),
                 request.email(),
@@ -118,7 +118,7 @@ public class AdminManagementRestController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(exception.getMessage()));
     }
 
-    private UserResponse toUserResponse(AppUser user) {
+    private UserResponse toUserResponse(Usuario user) {
         return new UserResponse(
                 user.getId(),
                 user.getNome(),

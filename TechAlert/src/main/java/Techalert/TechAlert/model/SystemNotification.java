@@ -49,7 +49,7 @@ public class SystemNotification {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_alvo_id", nullable = false)
-    private AppUser usuarioAlvo;
+    private Usuario usuarioAlvo;
 
     public Long getId() {
         return id;
@@ -115,11 +115,11 @@ public class SystemNotification {
         this.status = status;
     }
 
-    public AppUser getUsuarioAlvo() {
+    public Usuario getUsuarioAlvo() {
         return usuarioAlvo;
     }
 
-    public void setUsuarioAlvo(AppUser usuarioAlvo) {
+    public void setUsuarioAlvo(Usuario usuarioAlvo) {
         this.usuarioAlvo = usuarioAlvo;
     }
 
